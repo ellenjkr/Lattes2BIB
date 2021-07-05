@@ -9,11 +9,10 @@ class BibFile():
         self.publications = publications  # List of publications
         self.bibType = bibClass  # Publication type class
 
-        self.publicationsInfo = self.getInfo()  # Gets the info from each file
+        self.publicationsInfo = self.getInfo()  # Gets the info from each publication
         self.bibFormat = self.formatBib()  # Formats bib file
 
         self.outputDir = outputDir
-        self.saveBib()  # Saves the files
 
     def getAuthors(self, pub):
         authors = []
@@ -147,6 +146,6 @@ class BibFile():
 
         return bibFormat
 
-    def saveBib(self):  # Salva o arquivo
+    def save_bib(self):  # Salva o arquivo
         with open(f'{self.outputDir}/{self.bibType.fileName}.bib', 'w', encoding='UTF-8') as bibfile:
             bibfile.write(self.bibFormat)
