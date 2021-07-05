@@ -1,4 +1,4 @@
-from entryTypes import *
+from entry_types_classes import *
 from utils import *
 
 
@@ -14,7 +14,7 @@ class BibFile():
 
         self.outputDir = outputDir
 
-    def getAuthors(self, pub):
+    def get_authors_list(self, pub):
         authors = []
         for i in pub:
             if 'NOME-PARA-CITACAO' in i.attrib.keys():  # Finds the 'NOME-PARA-CITACAO' attribute
@@ -23,6 +23,9 @@ class BibFile():
                 # Adds the author to the list of authors
                 authors.append(author)
 
+        return authors
+
+    def authors_to_string(self, authors):
         authorsStr = ''
         # Generates a string with all the authors names
         for position, auth in enumerate(authors):
@@ -38,22 +41,23 @@ class BibFile():
         publicationsInfo = []
 
         for pos, pub in enumerate(self.publications):
-            publicationInfo = {'Publication': [], 'Field': {
-                'Tag': [], 'Info': []}, 'CiteKey': {'Author': [], 'Year': [], 'TitleWord': []}}
-            publicationInfo['Publication'].append(
-                pub)  # Adiciona a publicação ao array
+            publicationInfo = {'Publication': [], 'Field': {'Tag': [], 'Info': []}, 'CiteKey': {'Author': [], 'Year': [], 'TitleWord': []}}
+            
+            publicationInfo['Publication'].append(pub)  # Add publication to the array
 
-            authors = self.getAuthors(pub)
-            publicationInfo['Field']['Tag'].append(
-                'author')  # Adds the tag "author"
-            publicationInfo['Field']['Info'].append(
-                authors)  # Adds author info
+            authors_list = self.get_authors_list(pub)
+            authors = self.authors_to_string(authors_list) # Get authors
+
+            publicationInfo['Field']['Tag'].append('author')  # Adds the tag "author"
+            publicationInfo['Field']['Info'].append(authors)  # Adds author info
 
             # Gets the last name of the first author
-            firstAuthLastName = authors.split(',')
-            firstAuthLastName = firstAuthLastName[0]
-            publicationInfo['CiteKey']['Author'].append(firstAuthLastName.replace(
-                ' ', ''))  # Adds the last name of the first author to the cite key
+            first_auth_last_name = authors_list[0].split(',')[0]
+            publicationInfo['CiteKey']['Author'].append(first_auth_last_name.strip())
+            # first_auth_last_name = authors.split(',')
+            # first_auth_last_name = first_auth_last_name[0]
+            # publicationInfo['CiteKey']['Author'].append(first_auth_last_name.replace(
+            #     ' ', ''))  # Adds the last name of the first author to the cite key
 
             for tag in self.bibType.tags:  # For each tag for this type of publication
                 bibTag = tag[0]

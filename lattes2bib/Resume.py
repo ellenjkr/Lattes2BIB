@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from bibFileGenerator import *
+from BibFile import *
 
 class Resume():
 	def __init__(self, fileName, outputDir):
