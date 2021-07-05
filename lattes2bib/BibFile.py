@@ -3,14 +3,14 @@ from utils import *
 
 
 class BibFile():
-    def __init__(self, bibType, publications, bibClass, outputDir):
+    def __init__(self, bib_type_class, publications, bib_class, outputDir, period):
         super(BibFile, self).__init__()
-        self.type = bibType  # Publication type (article, book, etc)
+        self.type = bib_type_class  # Publication type (article, book, etc)
         self.publications = publications  # List of publications
-        self.bibType = bibClass  # Publication type class
+        self.bib_type_class = bib_class  # Publication type class
 
-        self.publicationsInfo = self.getInfo()  # Gets the info from each publication
-        self.bibFormat = self.formatBib()  # Formats bib file
+        self.publications_info = self.get_publications_info()  # Gets the info from each publication
+        self.bib_format = self.formatBib()  # Formats bib file
 
         self.outputDir = outputDir
 
@@ -19,7 +19,7 @@ class BibFile():
         for i in pub:
             if 'NOME-PARA-CITACAO' in i.attrib.keys():  # Finds the 'NOME-PARA-CITACAO' attribute
                 author = i.attrib['NOME-PARA-CITACAO']
-                author = titleCase(author)  # Name formatation
+                author = title_case(author)  # Name formatation
                 # Adds the author to the list of authors
                 authors.append(author)
 
@@ -36,93 +36,102 @@ class BibFile():
 
         return authorsStr
 
-    def getInfo(self):
+    def add_basic_info(self, publication_info, pub):
+        publication_info['Publication'].append(pub)  # Add publication to the array
+
+        authors_list = self.get_authors_list(pub)
+        authors = self.authors_to_string(authors_list) # Get authors
+
+        publication_info['Field']['Tag'].append('author')  # Adds the tag "author"
+        publication_info['Field']['Info'].append(authors)  # Adds author info
+
+        # Gets the last name of the first author
+        first_auth_last_name = authors_list[0].split(',')[0]
+        publication_info['CiteKey']['Author'].append(first_auth_last_name.strip())
+
+        return publication_info
+
+    def get_title_word(self, title): # Get the title first word that is not an exception
+        title = title.split(' ')
+        word = title[0]
+
+        for word in title:
+            if check_exception(word) is False:
+                # First word of the title that is not an exception (articles, prepositions, conjunctions) is added to the cite key
+                word = word.replace(':', '')  # Removes :
+                word = word.replace(',', '')  # Removes ,
+                
+                break
+
+        return word
+
+    def get_pages(self, pub, xml_index, xml_key):
+        try:
+            initPage = pub[xml_index[0]].attrib[xml_key[0]]
+            finalPage = pub[xml_index[1]].attrib[xml_key[1]]
+            # Merges initPage and finalPage
+            pages = f'{initPage}-{finalPage}'
+        except:
+            # If its the total number of pages instead of the initial and the final ones
+            pages = pub[xml_index].attrib[xml_key]
+
+        if pages[-1] == '-':
+            pages = pages[:-1]
+
+        return pages
+
+    def add_bibtype_info(self, publication_info, pub):
+        for tag in self.bib_type_class.tags:  # For each tag for this type of publication
+            bib_tag = tag[0]
+            xml_key = tag[1]  # Gets the xml key for this tag
+            xml_index = tag[2]  # Gets the xml index for this tag
+
+            if bib_tag == 'year':
+                publication_info['CiteKey']['Year'].append(pub[xml_index].attrib[xml_key])  # Adds the year to the cite key
+            elif bib_tag == 'title':
+                title = pub[xml_index].attrib[xml_key]  # Access the title
+                word = self.get_title_word(title)
+                publication_info['CiteKey']['TitleWord'].append(word)
+
+            if bib_tag == 'pages':
+                pages = self.get_pages(pub, xml_index, xml_key)
+                publication_info['Field']['Tag'].append(bib_tag)  # Adds the tag pages
+                publication_info['Field']['Info'].append(pages)  # Adds the pages
+
+            # If it's one of these tags the title case will be applied to it
+            elif bib_tag == 'journal' or bib_tag == 'booktitle' or bib_tag == 'title':
+                attrib = pub[xml_index].attrib[xml_key]
+                attrib = title_case(attrib)
+                publication_info['Field']['Tag'].append(bib_tag)  # Adds the tag
+                publication_info['Field']['Info'].append(attrib)  # Adds the info
+
+            else:  # In other cases
+                attrib = pub[xml_index].attrib[xml_key]
+                publication_info['Field']['Tag'].append(bib_tag)  # Adds the tag
+                publication_info['Field']['Info'].append(attrib)  # Adds the info
+
+        return publication_info
+
+    def get_publications_info(self):
         # List of publications and its info (fields and cite key)
-        publicationsInfo = []
+        publications_info = []
 
         for pos, pub in enumerate(self.publications):
-            publicationInfo = {'Publication': [], 'Field': {'Tag': [], 'Info': []}, 'CiteKey': {'Author': [], 'Year': [], 'TitleWord': []}}
-            
-            publicationInfo['Publication'].append(pub)  # Add publication to the array
+            publication_info = {'Publication': [], 'Field': {'Tag': [], 'Info': []}, 'CiteKey': {'Author': [], 'Year': [], 'TitleWord': []}}
 
-            authors_list = self.get_authors_list(pub)
-            authors = self.authors_to_string(authors_list) # Get authors
+            publication_info = self.add_basic_info(publication_info, pub)
+            publication_info = self.add_bibtype_info(publication_info, pub) # Get info from each tag of the publication type
+    
+            # if str(publication_info['CiteKey']['Year'][0]) in ["2016", "2017", "2018", "2019", "2020", "2021"]: // Filter period
+                # Adds the publication_info to a list of publications_info (A list with all the publications and its info)
+            publications_info.append(publication_info)
 
-            publicationInfo['Field']['Tag'].append('author')  # Adds the tag "author"
-            publicationInfo['Field']['Info'].append(authors)  # Adds author info
-
-            # Gets the last name of the first author
-            first_auth_last_name = authors_list[0].split(',')[0]
-            publicationInfo['CiteKey']['Author'].append(first_auth_last_name.strip())
-            # first_auth_last_name = authors.split(',')
-            # first_auth_last_name = first_auth_last_name[0]
-            # publicationInfo['CiteKey']['Author'].append(first_auth_last_name.replace(
-            #     ' ', ''))  # Adds the last name of the first author to the cite key
-
-            for tag in self.bibType.tags:  # For each tag for this type of publication
-                bibTag = tag[0]
-                xmlKey = tag[1]  # Gets the xml key for this tag
-                xmlIndex = tag[2]  # Gets the xml index for this tag
-
-                if bibTag == 'year':
-                    publicationInfo['CiteKey']['Year'].append(
-                        pub[xmlIndex].attrib[xmlKey])  # Adds the year to the cite key
-                elif bibTag == 'title':
-                    title = pub[xmlIndex].attrib[xmlKey]  # Access the title
-                    title = title.split(' ')
-
-                    for word in title:
-                        if checkException(word) == False:
-                            # First word of the title that is not an exception (articles, prepositions, conjunctions) is added to the cite key
-                            word = word.replace(':', '')  # Removes :
-                            word = word.replace(',', '')  # Removes ,
-                            publicationInfo['CiteKey']['TitleWord'].append(
-                                word)
-                            break
-
-                if bibTag == 'pages':
-                    try:
-                        initPage = pub[xmlIndex[0]].attrib[xmlKey[0]]
-                        finalPage = pub[xmlIndex[1]].attrib[xmlKey[1]]
-                        # Merges initPage and finalPage
-                        pages = f'{initPage}-{finalPage}'
-                    except:
-                        # If its the total number of pages instead of the initial and the final ones
-                        pages = pub[xmlIndex].attrib[xmlKey]
-
-                    if pages[-1] == '-':
-                        pages = pages[:-1]
-                    publicationInfo['Field']['Tag'].append(
-                        bibTag)  # Adds the tag pages
-                    publicationInfo['Field']['Info'].append(
-                        pages)  # Adds the pages
-
-                # If it's one of these tags the title case will be applied to it
-                elif bibTag == 'journal' or bibTag == 'booktitle' or bibTag == 'title':
-                    attrib = pub[xmlIndex].attrib[xmlKey]
-                    attrib = titleCase(attrib)
-                    publicationInfo['Field']['Tag'].append(
-                        bibTag)  # Adds the tag
-                    publicationInfo['Field']['Info'].append(
-                        attrib)  # Adds the info
-
-                else:  # In other cases
-                    attrib = pub[xmlIndex].attrib[xmlKey]
-                    publicationInfo['Field']['Tag'].append(
-                        bibTag)  # Adds the tag
-                    publicationInfo['Field']['Info'].append(
-                        attrib)  # Adds the info
-
-            # if str(publicationInfo['CiteKey']['Year'][0]) in ["2016", "2017", "2018", "2019", "2020", "2021"]: // Filter period
-                # Adds the publicationInfo to a list of publicationsInfo (A list with all the publications and its info)
-            publicationsInfo.append(publicationInfo)
-
-        return publicationsInfo
+        return publications_info
 
     def formatBib(self):
-        bibFormat = ''
-        for publicationInfo in self.publicationsInfo:
-            citeKeyInfo = publicationInfo['CiteKey']
+        bib_format = ''
+        for publication_info in self.publications_info:
+            citeKeyInfo = publication_info['CiteKey']
             '''
 			cite key formatation: lastname0000word, 
 			-> the last name of the first author
@@ -131,25 +140,25 @@ class BibFile():
 			'''
             self.citeKey = f"{citeKeyInfo['Author'][0].lower()}{citeKeyInfo['Year'][0].lower()}{citeKeyInfo['TitleWord'][0].lower()}"
             # Example @article{lastname0000word
-            bibFormat = bibFormat + '@' + \
+            bib_format = bib_format + '@' + \
                 self.type + '{' + self.citeKey + ',\n'
 
             # For each tag
-            for pos, tag in enumerate(publicationInfo['Field']['Tag']):
+            for pos, tag in enumerate(publication_info['Field']['Tag']):
                 # Info that corresponds to the tag
-                info = publicationInfo['Field']['Info'][pos]
+                info = publication_info['Field']['Info'][pos]
                 if pos == 0:
                     # If its the first tag it doesn't starts with a ',\n'
-                    bibFormat = bibFormat + '  ' + tag + ' = {' + info + '}'
+                    bib_format = bib_format + '  ' + tag + ' = {' + info + '}'
 
                 elif info != '' and info != ' ' and info != '-':  # If the information is not empty
-                    bibFormat = bibFormat + ',\n  ' + tag + \
+                    bib_format = bib_format + ',\n  ' + tag + \
                         ' = {' + info + '}'  # Example:  year = {1993},
 
-            bibFormat = bibFormat + '\n}\n\n'  # Close the bibtex
+            bib_format = bib_format + '\n}\n\n'  # Close the bibtex
 
-        return bibFormat
+        return bib_format
 
     def save_bib(self):  # Salva o arquivo
-        with open(f'{self.outputDir}/{self.bibType.fileName}.bib', 'w', encoding='UTF-8') as bibfile:
-            bibfile.write(self.bibFormat)
+        with open(f'{self.outputDir}/{self.bib_type_class.fileName}.bib', 'w', encoding='UTF-8') as bibfile:
+            bibfile.write(self.bib_format)

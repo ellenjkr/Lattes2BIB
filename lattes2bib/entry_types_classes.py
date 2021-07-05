@@ -4,7 +4,7 @@ class Article():
 	def __init__(self):
 		super(Article, self).__init__()
 		bibTags = ('title', 'journal', 'year', 'pages', 'volume', 'doi') # The fields(tags)
-		xmlKeys = ('TITULO-DO-ARTIGO', 'TITULO-DO-PERIODICO-OU-REVISTA', 'ANO-DO-ARTIGO', ('PAGINA-INICIAL', 'PAGINA-FINAL'), 'VOLUME', 'DOI') # The keys (from the xml dictionary) that contains each tag
+		xmlKeys = ('TITULO-DO-ARTIGO', 'TITULO-DO-PERIODICO-OU-REVISTA', 'ANO-DO-ARTIGO', ('PAGINA-INICIAL', 'PAGINA-FINAL'), 'VOLUME', 'DOI') # The keys (from the xml dictionary) corresponding to each bib tag
 		indexes = (0, 1, 0, (1, 1), 1, 0) # The index where the dictionary will be found
 
 		self.tags = list(zip(bibTags, xmlKeys, indexes))

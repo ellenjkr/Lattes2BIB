@@ -2,9 +2,10 @@ import xml.etree.ElementTree as ET
 from BibFile import *
 
 class Resume():
-	def __init__(self, fileName, outputDir):
+	def __init__(self, fileName, outputDir, period=None):
 		super(Resume, self).__init__()
 		self.outputDir = outputDir
+		self.period = period
 		self.bib_files = []
 
 		self.mytree = ET.parse(fileName)
@@ -19,24 +20,23 @@ class Resume():
 		 				   'TEXTOS-EM-JORNAIS-OU-REVISTAS': ['article', Text()], 
 		 				   'DEMAIS-TIPOS-DE-PRODUCAO-BIBLIOGRAFICA': ['article', Other()]} 
 
-
 	def get_bib_files(self): # Generates the bib files
 		for category in self.myroot[1]: # -> Produção Bibliográfica
 			if category.tag == 'LIVROS-E-CAPITULOS':
 				for i in category: # Separates books from chapters
 					if i.tag == 'LIVROS-PUBLICADOS-OU-ORGANIZADOS': 
 						books = i
-						bib = BibFile('book', books, self.entryTypes[i.tag], self.outputDir)
+						bib = BibFile('book', books, self.entryTypes[i.tag], self.outputDir, self.period)
 						self.bib_files.append(bib)
 					else:
 						chapters = i
-						bib = BibFile('inbook', chapters, self.entryTypes[i.tag], self.outputDir)
+						bib = BibFile('inbook', chapters, self.entryTypes[i.tag], self.outputDir, self.period)
 						self.bib_files.append(bib)
 			else:
 				if category.tag in self.entryTypes.keys():
 					pub = category # List of publications of a category
 					pubType = self.entryTypes[category.tag] # Get the data of the category (its bib signature and its fields (tags))
-					bib = BibFile(pubType[0], pub, pubType[1], self.outputDir) # Entry type, publications, fields, output directory
+					bib = BibFile(pubType[0], pub, pubType[1], self.outputDir, self.period) # Entry type, publications, fields, output directory
 					self.bib_files.append(bib)
 				else:
 					print('Categoria não inclusa na implementação: ', category.tag)
