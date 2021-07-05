@@ -5,7 +5,7 @@ import re
 from errno import EEXIST
 from os import makedirs
 from os import path
-from xmlReader import Resume
+from Resume import Resume
 
 def mkdir_p(pathName): # Creates a directory (mkdir -p on cmd)
 	try:
