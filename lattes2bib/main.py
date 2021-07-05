@@ -27,6 +27,6 @@ if __name__ == '__main__':
 		outputDir = f'Results/{fileName[0]}' # .bib files will be saved to a folder that has the name of the resume, on the folder "Results"
 		mkdir_p(outputDir) # Creates the folder that will hold the .bib files
 
-		resume = Resume(inputDir, outputDir) # Reads xml file
+		resume = Resume(inputDir, outputDir, period=["2016", "2017", "2018", "2019", "2020", "2021"]) # Reads xml file, it's also possible to send a period (default=None)
 		bib_files = resume.get_bib_files() # Get the works from the xml file
 		resume.save_bib_files(bib_files)

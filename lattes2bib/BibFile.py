@@ -8,11 +8,12 @@ class BibFile():
         self.type = bib_type_class  # Publication type (article, book, etc)
         self.publications = publications  # List of publications
         self.bib_type_class = bib_class  # Publication type class
+        self.outputDir = outputDir
+        self.period = period
 
         self.publications_info = self.get_publications_info()  # Gets the info from each publication
         self.bib_format = self.formatBib()  # Formats bib file
 
-        self.outputDir = outputDir
 
     def get_authors_list(self, pub):
         authors = []
@@ -122,9 +123,13 @@ class BibFile():
             publication_info = self.add_basic_info(publication_info, pub)
             publication_info = self.add_bibtype_info(publication_info, pub) # Get info from each tag of the publication type
     
-            # if str(publication_info['CiteKey']['Year'][0]) in ["2016", "2017", "2018", "2019", "2020", "2021"]: // Filter period
+            if self.period != None:
+                if str(publication_info['CiteKey']['Year'][0]) in ["2016", "2017", "2018", "2019", "2020", "2021"]:
+                    # Adds the publication_info to a list of publications_info (A list with all the publications and its info)
+                    publications_info.append(publication_info)
+            else:
                 # Adds the publication_info to a list of publications_info (A list with all the publications and its info)
-            publications_info.append(publication_info)
+                publications_info.append(publication_info)
 
         return publications_info
 
