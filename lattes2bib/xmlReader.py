@@ -29,9 +29,12 @@ class XmlFile():
 						chapters = i
 						bib = BibFile('inbook', chapters, self.entryTypes[i.tag], self.outputDir)
 			else:
-				pub = category # List of publications of a category
-				pubType = self.entryTypes[category.tag] # Get the data of the category (its entry type and its fields(tags))
-				bib = BibFile(pubType[0], pub, pubType[1], self.outputDir) # Entry type, publications, fields, output directory
+				if category.tag in self.entryTypes.keys():
+					pub = category # List of publications of a category
+					pubType = self.entryTypes[category.tag] # Get the data of the category (its entry type and its fields(tags))
+					bib = BibFile(pubType[0], pub, pubType[1], self.outputDir) # Entry type, publications, fields, output directory
+				else:
+					print('Categoria não inclusa na implementação: ', category.tag)
 
 		# ====================================================================
 		'''
